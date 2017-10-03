@@ -1,7 +1,7 @@
 // rdmd delegatefunctionexample.d
 module externdelegate;
 
-import std.stdio, std.format;
+import std.stdio;
 import delegatefunction;
 
 // Note: Equivalent semantics for the previous functions using DIP 1011 extern(delegate)
@@ -20,7 +20,7 @@ else
 {
     //
     // Instantiate 2 delegate functions using the current library implementation
-    // defined in delegatefunctions.d.  Note that the second function which
+    // defined in delegatefunction.d.  Note that the second function which
     // is a templateted function doesn't quite work yet.
     //
     mixin delegateFunctionImpl!("importantWriteln", "", "File", "file", "string msg",

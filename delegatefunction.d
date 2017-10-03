@@ -1,10 +1,12 @@
 module delegatefunction;
 
-mixin template delegateFunctionImpl(string functionName, string templateArguments,
+string generateDelegateFunctionCode(string functionName, string templateArguments,
     string contextType, string contextVarName, string arguments, string code)
 {
-    private import util : formatArgNamesOnly;
-    enum MixinCode = `struct ` ~ functionName ~ templateArguments ~ `
+    import std.format : format;
+    import util : formatArgNamesOnly;
+
+    return `struct ` ~ functionName ~ templateArguments ~ `
 {
     ` ~ contextType ~ ` ` ~ contextVarName ~ `;
     auto opCall(` ~ arguments ~ `)
@@ -22,11 +24,14 @@ mixin template delegateFunctionImpl(string functionName, string templateArgument
     }
 }
 `;
-    pragma(msg, MixinCode);
-    mixin(MixinCode);
 }
 
-
+mixin template delegateFunctionImpl(T...)
+{
+    enum Code = generateDelegateFunctionCode(T);
+    pragma(msg, Code);
+    mixin(Code);
+}
 
 //
 // Save code that could be used to parse function signature to implement the delegateFunction
