@@ -1,40 +1,36 @@
 module delegatefunction;
 
-import std.stdio;
-import std.format;
-import util;
-
-mixin template delegateFunctionImpl(string functionName, string templateArguments, string contextType, string contextVarName, string arguments, string code)
+mixin template delegateFunctionImpl(string functionName, string templateArguments,
+    string contextType, string contextVarName, string arguments, string code)
 {
     private import util : formatArgNamesOnly;
-    enum MixinCode = `struct ` ~ functionName ~ `
+    enum MixinCode = `struct ` ~ functionName ~ templateArguments ~ `
 {
-    private auto memberFunction` ~ templateArguments ~ `(` ~ arguments ~ `)
-    {
-        auto ` ~ contextVarName ~ ` = cast(` ~ contextType ~ `)&this;
-` ~ code ~ `
-    }
-    pragma(inline) static auto opCall` ~ templateArguments ~ `(` ~ contextType ~ ` ` ~ contextVarName ~
+    ` ~ contextType ~ ` ` ~ contextVarName ~ `;
+    auto opCall(` ~ arguments ~ `)
+    {` ~ code ~ `}
+    pragma(inline) static auto opCall(ref ` ~ contextType ~ ` ` ~ contextVarName ~
         ( (arguments.length == 0) ? "" : ", ") ~ arguments ~ `)
     {
-        return (cast(` ~ functionName ~ `*)` ~ contextVarName ~ `).memberFunction(` ~
+        return (cast(` ~ functionName ~ `*)&` ~ contextVarName ~ `).opCall(` ~
             format("%s", arguments.formatArgNamesOnly) ~ `);
     }
     // NOTE: this doesn't quite work yet if there are template parameters
-    static auto createDelegate` ~ templateArguments ~ `(` ~ contextType ~ ` ` ~ contextVarName ~ `)
+    pragma(inline) static auto createDelegate` ~ templateArguments ~ `(ref ` ~ contextType ~ ` ` ~ contextVarName ~ `)
     {
-        ` ~ functionName ~ ` __dummyWrapper__;
-        auto dg = &__dummyWrapper__.memberFunction;
-        dg.ptr = cast(void*)` ~ contextVarName ~ `;
-        return dg;
+        return &(cast(` ~ functionName ~ `*)&` ~ contextVarName ~ `).opCall;
     }
 }
 `;
-   // pragma(msg, MixinCode);
+    pragma(msg, MixinCode);
     mixin(MixinCode);
 }
 
+
+
 //
+// Save code that could be used to parse function signature to implement the delegateFunction
+// mixin template that forward the necessary strings to delegateFunctionImpl
 //
 /+
 mixin template delegateFunction(string func)
@@ -63,7 +59,8 @@ mixin template delegateFunction(string func)
     mixin(MixinCode);
 
 }
-+/
+
+
 
 auto skipWhitespace(string str, size_t index)
 {
@@ -133,3 +130,4 @@ auto findChar(string str, char c)
         }
     }
 }
++/
